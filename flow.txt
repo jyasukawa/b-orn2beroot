@@ -1,0 +1,249 @@
+Download Debian
+
+Install VirtualBox
+校舎で課題を進める場合、virtual box のダンウンロードはdockにあるManaged Software Centerの中にあるものをインストールすればいけるみたいです。Scrapboxのリンクにある方法では管理者権限で弾かれます。 （画像の真ん中のアイコンがManaged Software Centerです）
+
+open VM
+goinfre/your_intra_login/Virtual Machine Name
+ストレージの前にシステムから光学いじる？
+いや、debianを起動してそこでの設定で？
+
+！！！！あとでパスワードをBorn2beRootにかえられるようにとりあえず１２３４５６７８９とかにしておく
+machinenameはVirtualBoxにする！！！！！
+
+open Debian
+指示にそって、english やotherを選択
+hostname: jyasukaw42
+root Password for the Host Name: Born2beRoot
+
+Full name for the new user; jyasukaw
+username for your account; jyasukaw
+Create a Password for the User Name; Born2beRoot
+
+パーテーションは２番めでいい？
+Create a Encryption passphrase; Born2beRoot
+
+max (8.1 or 12.4?)
+finish
+change to disk -> yes!!!!!!!!!!
+Configure the package manager. -> No
+Japan
+Configuring popularity-contest. -> No
+とりあえず全部のスペースけしてエンター
+
+ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+select Debian GNU/Linux
+Enter your encryption password; Born2beRoot
+Login in as the your_username; jyasukaw
+Password for the User Name; Born2beRoot
+
+Once you're logged in, use the following commands to check if everything is according to the plan:
+cat /etc/os-release - see information on the system installed;
+lsblk - see the partitioning's scheme.
+
+Some importante commands to keep in hand:
+logout or exit - exit current session to enable you to change the active user;
+reboot - reboot the system (needs root permission);
+poweroff - turns the system off (needs root permission).
+
+Step 1: Installing sudo
+Switch to root and its environment via : su -
+root password; Born2beRoot
+apt install sudo
+...so the package manager install the required packages for sudo
+dpkg -l | grep sudo
+...Verify whether sudo was successfully installed
+(sudo reboot)
+...reboot machine so the changes can be applied
+(sudo -V)
+...this command will show the sudo version
+adduser <username> sudo (今回は; jyasukaw)  or (sudo adduser <login>) or (sudo usermod -aG sudo <username>)
+...add user in the sudo group
+getent group sudo
+...Verify whether user was successfully added to sudo group
+sudo reboot
+sudo -v -> password
+sudo addgroup user42
+sudo adduser yourusername user42 (sudo adduser <user> <groupname>)
+sudo apt update              GID= Group id
+(getent group <groupname>) or (cat /etc/group)
+...see all groups and the users in any of them
+
+Installing SSH
+sudo apt install openssh-server
+...install the main tool for remote access with the SSH protocol, using OpenSSH
+When we are asked for confirmation we will write y
+sudo systemctl status ssh  or (sudo service ssh status) or (dpkg -l | grep ssh)
+...show how is the state of it.
+nanoの使い方（編集と保存調べる）
+sudo nano /etc/ssh/sshd_config         or (sudo apt install vim) -> (sudo vi(m) /etc/ssh/sshd_config)
+...some files have been created and we need to configur them
+(If you are not on root you will not be able to edit the file; as you know, for switching to root we use su.)
+Once we are editing the file we need to update the following lines:
+
+ #Port 22 -> Port 4242
+ #PermitRootLogin prohibit-password -> PermitRootLogin no
+
+When finish we have to save the changes and leave the file.
+Now with the file /etc/ssh/ssh_config. (not sshd_config)
+
+#Port 22 -> Port 4242
+
+sudo service ssh restart
+...restart the ssh service so it can be updated
+sudo service ssh status
+...confirm that everything is alright
+
+Installing UFW
+(sudo apt update)
+sudo apt install ufw
+...install the packages for UFW
+when we are asked for confirmation type y
+(dpkg -l | grep ufw)
+sudo ufw enable
+...Enable Firewall
+sudo ufw allow 4242
+... allow our firewall to accept the connections that will happens in the 4242 port
+sudo ufw status   or (sudo ufw status verbose) or (sudo ufw status numbered)
+...check if everything done here is correct
+
+Configuring sudo
+sudo touch /etc/sudoers.d/sudoconfig
+...create a file in /etc/sudoerd.d/. The file will serve the purpouse of storing our sudo policy.
+sudo mkdir /var/log/sudo
+...create a directory as is asked in the subject in /var/log/ because each commands need to be logged, the input and output
+sudo nano /etc/sudoers.d/sudoconfig
+...then write next lines in our new file:
+
+Defaults    passwd_tries=3
+Defaults    badpass_message="Incorrect password"
+Defaults    logfile="/var/log/sudo/sudo_config"          ->(Path where will the sudo logs will be stored.)
+Defaults    log_input, log_output                        ->(What will be logged.)
+Defaults    iolog_dir="/var/log/sudo"                    ->(What will be logged.)
+Defaults    requiretty                                   ->(TTY is required)
+Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"    ->(Folders that will be excluded of sudo)
+
+Setting up a strong password policy
+sudo nano /etc/login.defs
+...editing the login.defs file
+set the next parameters:
+
+PASS_MAX_DAYS 99999 -> PASS_MAX_DAYS 30
+PASS_MIN_DAYS 0 -> PASS_MIN_DAYS 2
+
+(PASS_MAX_DAYS: It's the max days till password expiration.)
+(PASS_MIN_DAYS: It's the min days till password change.)
+(PASS_WARN_AGE: It's the days till password warning.)
+
+sudo apt install libpam-pwquality
+...continuing the installation we must install the next packages
+we wrute Y so we can continue; we wait till it finish.
+nano /etc/pam.d/common-password
+...edit a file and change itś content
+ After retry=3 we must add the following commands:
+
+This is how the line must be
+
+password requisite pam_pwqiality.so retry=3 minlen=10...
+
+minlen=10 ucredit=-1 dcredit=-1 lcredit=-1 maxrepeat=3 reject_username difok=7 enforce_for_root
+
+写真参考
+
+minlen=10 ➤ パスワードは少なくとも10文字必要です。
+ucredit=-1 ➤ パスワードには大文字の文字が含まれている必要があります。最小文字数を示す - 記号を使用します。+ 記号を使用すると、最大文字数を指定します。
+dcredit=-1 ➤ パスワードには数字が含まれている必要があります。
+lcredit=-1 ➤ パスワードには小文字の文字が含まれている必要があります。
+maxrepeat=3 ➤ パスワードには同じ文字が3回以上連続して含まれていてはいけません。
+reject_username ➤ パスワードにはユーザー名を含めることはできません。
+difok=7 ➤ パスワードは、前回のパスワードと少なくとも7つの異なる文字を含む必要があります。
+enforce_for_root ➤ このパスワードポリシーはルートユーザーに対して適用されます。
+
+Now you have to change all your passwords according to your new password policy
+[$ passwd]      * <- change user password
+[$ sudo passwd] * <- change root password
+
+Connecting to SSH
+sudo shutdown
+...Turn off your VM
+(To exit your Virtual Machine and use your mouse, press command on your Apple Keyboard and your mouse should appear)
+Go to your VM settings in VirtualBox
+Settings ->Network -> Adapter 1 -> Advanced -> Port forwarding
+Add new rule (little green button on right top side) and next parameters:
+Change the Host Port and Guest Port to 4242  写真参考
+We will click accept so changes can be saved.
+
+(Then head back to your Virtual Machine)
+(Type sudo systemctl restart ssh to restart your SSH Server)
+(Type sudo service sshd status to check your SSH Status)
+
+In your host (physical) machine (iTerm )open Terminal and run
+ssh <username>@127.0.0.1 -p 4242     or   (ssh <username>@localhost -p 4242)   or  (ssh m<username>@0.0.0.0 -p 4242)
+it will ask for the password of the user that we are trying to log in. Once the password is introduced it will show or login in green, that will mean that the connections has been successfully.
+exit
+...To quit the ssh connection
+Now you can control your virtual machine from the host terminal.
+
+
+Dont forget to make a clone or snapshot of your VM before evaluation 
+
+
+Crontab
+It is a background process manager. The specified processes will be executed at the time you specify in the crontab file.
+sudo vim /usr/local/bin/monitoring.sh
+...Create script file
+sudo chmod +x /usr/local/bin/monitoring.sh
+...Make executable
+sudo crontab -u root -e
+...To properly configure crontab, we must edit the crontab file
+After line23 
+
+23 # m h  dom mon dow   command
+
+In the file, we must add the following command for the script to execute every 10 minutes
+Put line24
+
+*/10 * * * * /usr/local/bin/monitoring.sh
+
+*/10 * * * * sh /path/to/script   ???写真参考
+*/10 * * * * /home/monitoring.sh
+
+sudo crontab -u root -l
+...Check scheduled jobs
+
+各crontabパラメータの操作方法は以下の通りです：
+m ➤ スクリプトが実行される分を示し、値は0から59までの範囲です。
+h ➤ 正確な時間を示し、24時間形式が使用され、値は0から23までの範囲です。0は午前0時（12:00午前）を表します。
+dom ➤ 月の日を指し、例えば、毎月15日に実行する場合、15を指定できます。
+dow ➤ 週の曜日を指します。数値で指定できます（0から7で、0と7は日曜日を表します）、または英語で曜日の最初の3文字を使用できます：mon、tue、wed、thu、fri、sat、sun。
+user ➤ コマンドを実行するユーザーを定義します。rootや、スクリプトを実行する許可を持つ他のユーザーにすることができます。
+command ➤ 実行されるコマンドまたはスクリプトの絶対パスを指します
+これらのパラメータは、cronジョブをスケジュールする際に使用され、ジョブがいつ、誰によって、どのコマンドまたはスクリプトが実行されるかを指定します。
+
+
+Signature.txt (Last Part Before Defence)
+Warning: before you generate a signature number, turn off your Virtual Machine.
+To obtain the signature, the first thing we must do is shut down the virtual machine, since once you turn it on or modify something, the signature will change.
+
+Open iTerm and type 
+
+cd
+Then type 
+
+cd sgoinfre/students/<your_intra_username>/VirtualBox VMs
+or 
+~/VirtualBox VMs/
+
+then
+shasum <machinename>.vdi
+
+shasum VirtualBox.vdi or whatever your Virtual Machine is called (This can take from a few seconds to 5 mins).
+
+And save the signature to a file named signature.txt.
+Copy the output number and create a signature.txt file and paste that number in the file.
+Now you submit the signature.txt file with the output number in it.
+ The result of this signature is what we will need to add to our signature.txt file and subsequently upload the file to the intra repository. It is very important not to reopen the machine since the signature will be modified. For corrections, remember to clone the machine so you can turn it on without fear of changing the signature.
+
+What is shasum❓ It is a command that allows you to identify the integrity of a file using the SHA-1 hash check sum of a file.
+
+CONGRATULATIONS! YOU HAVE NOW FINISHED! NEXT IS THE EVALUATION

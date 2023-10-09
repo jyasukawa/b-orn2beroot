@@ -1,53 +1,97 @@
 #!/bin/bash
 
-aaaaaa
-
-
-
-
-aaaaaa
-
-wall "	#Architecture: $ARCH
-				#CPU physical: $CPU_P
-				#vCPU: $VCPU
-				#Memory Usage: $MEMUSED/${MEMTOTAL}MB ($MEMPER%)
-				#Disk Usage: $DUSED/${DTOTAL}Gb ($DPER)
-				#CPU load: $CPUL%
-				#Last boot: $LBOOT
-				#LVM use: $LVM
-				#Connexions TCP: $TCP ESTABLISHED
-				#User log: $ULOG
-				#Network: IP $HOST ($MAC)
-				#Sudo: $SUD cmd"
-
-
-				#!/bin/bash
 ARCH=$(uname -a)
-CPU=$(cat /proc/cpuinfo | grep "^cpu cores" | cut -d ':' -f2)
-VCPU=$(cat /proc/cpuinfo | grep "^processor" | wc -l)
-MEMUSED=$(free -m | grep Mem | awk '{print $3}')
-MEMTOTAL=$(free -m | grep Mem | awk '{print $2}')
-MEMPER=$(free -m |  grep Mem | awk '{printf "%.2f" ,$3*100/$2}')
-DUSED=$(df --total -m | grep total | awk '{print $3}')
-DTOTAL=$(df --total -h | grep total | awk '{printf "%d", $2}')
-DPER=$(df --total -h | grep total | awk '{print $5}')
-CPUL=$(top -bin 1 | grep %Cpu\(s\) |awk '{print $2 + $4}')
-LBOOT=$(who -b | awk '{print $3, $4}')
-TCP=$(netstat -an | grep ESTABLISHED | wc -l)
-LVM=$(lsblk | grep lvm | awk '{if ($1) {print "yes";exit;} else {print "no"}}')
-ULOG=$(who | cut -d " " -f1 | sort -u | wc -l)
-HOST=$(hostname -I)
-MAC=$(ip a | grep "ether" | awk '{print $2}')
-SUD=$(cat /var/log/sudo/sudo.log | grep COMMAND | wc -l)
+uname コマンドは、システム情報を表示するために使用されます。 
+-a オプションを指定することで、アーキテクチャとカーネルバージョンなどの詳細情報を含むすべての情報を表示します。
+
+CPU_P=$(grep "physical id" /proc/cpuinfo | sort -u | wc -l)
+プロセッサに関する情報が含まれる/proc/cpuinfo ファイルから 物理プロセッサの数を含む"physical id" を含む行を抽出し、重複を削除して、最終的に行の数をカウントする
+sort: テキストファイル内の行をソートするためのコマンドです。デフォルトでは、辞書順にソートされます。
+-u オプション: ソートした結果から重複した行を削除する。重複した行がある場合、1つの行だけが残り、他の重複した行は削除されます。
+wc コマンドは、テキストファイルの行数や単語数、文字数をカウントするためのコマンドです。
+-l オプションは、行数をカウントすることを指示します。
+grep -c と grep | wc -l の出力結果が異なる主な場合は、以下のような状況です。
+テキストデータ内で同じ文字列が1行に複数回出現する場合：
+grep -c は同じ行内での出現回数をカウントし、その行全体を1回の出現として数えます。つまり、同じ行内で複数回出現しても、1回の出現としてカウントされます。
+grep | wc -l は行数を数えるため、同じ文字列が同じ行内で複数回出現していても、それぞれの出現を別々の行としてカウントします。
+複数のファイルからの出力を結合する場合：
+grep -c は各ファイルに対して出現回数をカウントし、それらのカウントを合計しません。単一のファイルに対しての出現回数しか表示されません。
+grep | wc -l を使用する場合、各ファイルからの出力を結合し、それらの合計行数を表示します。この場合、複数のファイルを対象とした出現回数を取得できます。
+グローバルな検索での結果をまとめる場合：
+複数のファイルやディレクトリを対象にして、特定の文字列の出現回数を総合的に知りたい場合、grep を複数回実行し、その結果を wc -l で合計する方法が必要です。
+grep -c を使う場合、grep はマッチした行の数を直接カウントしますが、この場合、/proc/cpuinfo ファイル内で同じ文字列が複数回出現する可能性があるため、正確な物理CPUの数が得られないかもしれません。そのため、一般的には | sort -u | wc -l の方法を使用して物理CPUの数を正確に数えることが推奨されます。
+
+
+V_CPU=$(grep "^processor" /proc/cpuinfo | sort -u | wc -l)
+grep "^processor" コマンドでは、"processor" が各行の先頭にある行を検索するため、^ が使用されています
+ファイル内の各行について ^processor で始まる行は一意であり、重複することがないためです。このため、sort -u を使う必要はありません
+
+RAM_USED_PERC=$(free -m | awk '/Mem/ {printf("%s/%s (%.2f%%)", $3, $2, $3/$2*100)}')
+free コマンドは、システムのメモリ使用状況を表示します。
+-m オプションはメガバイト単位で表示します。"total" 行のメモリ総容量と "used" 行のメモリ使用量を確認できます。利用率は計算が必要です。
+NR は AWK プログラム内で使用される AWK の組み込み変数で、現在の入力行番号を表します。NR==2 は NR の値が2の場合に条件を満たすことを意味します。
+例）awk 'NR==2' filename -> filename というファイルから2番目の行を抽出して表示します。
+		awk 'NR==2 {print $1}' filename -> filename というファイルから2番目の行の1番目のフィールド（単語または列）を表示します。
+		awk 'NR%2==1' filename -> filename というファイル内で行番号が奇数の行を表示します。
+AWKやシェルスクリプトなどのテキスト処理ツールやプログラムでは、テキストの行や列を処理する際にフィールドを指定するために $3 のような表記が使われます。具体的には、$1 は1つ目のフィールド（通常、スペースで区切られた最初の列）、$2 は2つ目のフィールド、$3 は3つ目のフィールド、というように続きます
+/Mem/の部分は$1 == "Mem:"やNR==2も可
+
+DISK_USED=$(df -Bm | grep '^/dev/' | grep -v '/boot$' | awk '{du += $3} END {print du}')
+DISK_TOTAL=$(df -Bg | grep '^/dev/' | grep -v '/boot$' | awk '{dt += $2} END {print dt}')
+DISK_PERC=$(df -Bm | grep '^/dev/' | grep -v '/boot$' | awk '{du += $3} {dt+= $2} END {printf("%d"), du/dt*100}')
+grep -v オプションは、grep コマンドを使用してテキストデータから特定のパターンを検索する際に、特定のパターンに一致しない行を表示するために使用されるオプションです。具体的には、grep -v を使用すると、指定したパターンに一致する行を表示せず、それ以外の行を表示します。
+awk '{du += $3} END {print du}'
+'{du += $3}': awk スクリプトの一部で、du という変数を定義し、各行の3番目のフィールド（カラム）を合計しています。具体的には、各行の3番目のフィールドの値を du に加算しています。
+END {print du}: awk スクリプトの最後の部分で、すべての行を処理した後に実行されるコードです。ここでは、変数 du の最終的な値を出力しています。
+
+CPU_L=$(top -bn1 | grep '^%Cpu' | awk '{printf("%.1f"), $2 + $4}')
+$2だけでいい？
+
+LAST_B=$(who -b | awk '{print $3 " " $4}')
+who -b コマンドは、LinuxおよびUnix系のオペレーティングシステムで使用されるコマンドで、システムの最後の再起動時間を表示します
+who -b コマンドは、システムに関するブート情報を表示します。
+出力の最初の列は "system" と表示されています。これはブートしたシステム自体を指します。
+次の列には "boot" と表示されており、システムが起動したことを示します。
+その後に、実際の再起動日時が表示されます。
+$(who -b | awk '$1 == "system" {print $3 " " $4}')こっちが正解？
+
+
+LVM=$(if [ $(lsblk | grep "lvm" | wc -l) -eq 0 ]; then echo no; else echo yes; fi)
+まず中の$()を展開する
+lsblk コマンドは、Linuxシステム上でブロックデバイス（ディスク、パーティション、仮想デバイスなど）の情報をリスト表示するためのコマンドです。このコマンドを使用すると、システム内のブロックデバイスの階層構造や容量、マウントポイントなどの情報を確認できます。
+lsblk コマンドはデバイス情報を視覚的に把握するのに便利で、システムのストレージ構成を理解したり、新しいディスクが認識されたかどうかを確認したりするのに役立ちます。
+ここに"lvm"の表記があればつかわれている
+
+C_TCP=$(ss -t | grep ESTAB | wc -l)
+ss（Socket Statistics）コマンドは、Linuxシステムでネットワークソケットの情報を表示するために使用されるユーティリティです。ssコマンドはnetstatコマンドの代替として広く使用されています
+-tまたは--tcp: TCPソケットを表示します| grep ESTABを使用してESTAB（確立）状態の接続数を数えることができます。
+
+U_LOG＝$(users | wc -w)
+usersコマンドは、現在のシステムにログインしているユーザーの一覧を表示します。各ユーザーは改行で区切られ、ユーザー名が表示されます。
+wcコマンドに-wオプションを付けると、単語数（ワードカウント）をカウントします。しかし、usersコマンドの出力は改行で区切られたユーザー名のリストであり、単語数は改行ごとにカウントされます。
+この方法は現在のセッションにログインしているユーザー数を取得します。
+ログインセッション内のユーザー数を取得するため、一番適しています。
+
+IP_ADDR=$(hostname -I)
+hostnameコマンドは、ホスト名に関する情報を提供します。-Iオプションを使用すると、IPv4アドレスが表示されます
+
+MAC=$(ip link show | awk '$1 == "link/ether" {print $2}')
+ip link show コマンドの出力をパイプで awk に渡し、行の先頭が "link/ether" の場合に2番目のフィールド（MACアドレス）を抽出します。
+精確なマッチングを行うため、行全体が "link/ether" で始まる必要があります。
+
+SUDO_COUNT=$(journalctl _COMM=sudo | grep COMMAND | wc -l)
+journalctl コマンドを使用して、sudoコマンドに関連するログエントリをフィルタリングします。"COMMAND" という文字列を含む行を grep コマンドでさらにフィルタリングし、その行数を wc -l でカウントします。
+システムログにアクセスし、sudoコマンドのログを取得します。systemdベースのシステムでは、この方法が有用です。
+
 wall "	#Architecture: $ARCH
-	#CPU physical : $CPU
-	#vCPU : $VCPU
-	#Memory Usage: $MEMUSED/${MEMTOTAL}MB ($MEMPER%)
-	#Disk Usage: $DUSED/${DTOTAL}Gb ($DPER)
-	#CPU load: $CPUL%
-	#Last boot: $LBOOT
-	#LVM use: $LVM
-	#Connexions TCP : $TCP ESTABLISHED
-	#User log: $ULOG
-	#Network: IP $HOST ($MAC)
-	#Sudo : $SUD cmd"
+				#CPU physical : $CPU_P
+				#vCPU : $V_CPU
+				#Memory Usage: $RAM_USED_PERC
+				#Disk Usage: $DISK_USED/${DISK_TOTAL}Gb ($DISK_PERC%)
+				#CPU load: $CPU_L%
+				#Last boot: $LAST_B
+				#LVM use: $LVM_U
+				#Connexions TCP : $C_TCP ESTABLISHED
+				#User log: $U_LOG
+				#Network: IP $IP_ADDR ($MAC)
+				#Sudo : $SUDO_COUNT cmd"
