@@ -1,31 +1,26 @@
-Download Debian
+Debianをダウンロード
 
-Install VirtualBox
+VirtualBoxをインストール
 校舎で課題を進める場合、virtual box のダンウンロードはdockにあるManaged Software Centerの中にあるものをインストールすればいけるみたいです。Scrapboxのリンクにある方法では管理者権限で弾かれます。 （画像の真ん中のアイコンがManaged Software Centerです）
 
 open VM
 goinfre/your_intra_login/Virtual Machine Name
-ストレージの前にシステムから光学いじる？
-いや、debianを起動してそこでの設定で？
 
-！！！！あとでパスワードをBorn2beRootにかえられるようにとりあえず１２３４５６７８９とかにしておく
-machinenameはVirtualBoxにする！！！！！
+パスワードを１２３４５６７８９とかにしておく
+machinenameはVirtualBoxにする
 
 open Debian
 指示にそって、english やotherを選択
 hostname: jyasukaw42
-root Password for the Host Name: Born2beRoot
+root Password for the Host Name: 123456789
 
 Full name for the new user; jyasukaw
 username for your account; jyasukaw
-Create a Password for the User Name; Born2beRoot
+Create a Password for the User Name; 123456789
 
-パーテーションは２番めでいい？
-Create a Encryption passphrase; Born2beRoot
+Create a Encryption passphrase; Born2beRoot 123456789
 
-max (8.1 or 12.4?)
-finish
-change to disk -> yes!!!!!!!!!!
+change to disk -> yes
 Configure the package manager. -> No
 Japan
 Configuring popularity-contest. -> No
@@ -33,36 +28,55 @@ Configuring popularity-contest. -> No
 
 ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 select Debian GNU/Linux
-Enter your encryption password; Born2beRoot
+Enter your encryption password; Born2beRoot 123456789
 Login in as the your_username; jyasukaw
-Password for the User Name; Born2beRoot
+Password for the User Name; 123456789
 
 Once you're logged in, use the following commands to check if everything is according to the plan:
-cat /etc/os-release - see information on the system installed;
-lsblk - see the partitioning's scheme.
+[cat /etc/os-release] - see information on the system installed;
+[lsblk] - see the partitioning's scheme.
 
 Some importante commands to keep in hand:
-logout or exit - exit current session to enable you to change the active user;
-reboot - reboot the system (needs root permission);
-poweroff - turns the system off (needs root permission).
+[logout] or [exit] - exit current session to enable you to change the active user;
+[reboot] - reboot the system (needs root permission);
+[poweroff] - turns the system off (needs root permission).
 
-Step 1: Installing sudo
-Switch to root and its environment via : su -
+Installing sudo
+Switch to root and its environment via : [su]
 root password; Born2beRoot
-apt install sudo
+[apt install sudo]
 ...so the package manager install the required packages for sudo
-dpkg -l | grep sudo
+＜aptコマンド＞
+Debianにおいて、aptコマンドはパッケージ管理ツールの一部であり、システム上のパッケージの検索、インストール、更新、削除などを行うために使用されます。aptは"Advanced Package Tool"の略で、DebianベースのLinuxディストリビューションで広く使用されています
+[apt install package_name]...パッケージ名を指定して、パッケージをインストールします。必要な依存関係も自動的に解決されます。
+[apt show package_name]...パッケージの詳細情報を表示します。
+[apt update]...パッケージリストを更新し、利用可能なパッケージの最新情報を取得します。
+[apt upgrade]...システム内の全てのパッケージを最新バージョンにアップグレードします。
+[dpkg -l | grep sudo]
 ...Verify whether sudo was successfully installed
+＜dpkgコマンド＞
+（Debian Package）は、DebianベースのLinuxディストリビューションでパッケージの管理と操作を行うためのコマンドラインツールです。dpkgコマンドはシステムにパッケージをインストール、アンインストール、アップグレード、またはパッケージ情報を表示するために使用されます
+[dpkg -l]...インストールされたパッケージの一覧を表示します。
 (sudo reboot)
 ...reboot machine so the changes can be applied
 (sudo -V)
-...this command will show the sudo version
+...udo -vコマンドは、sudo（Superuser Do）の有効期限をリフレッシュするために使用されるコマンドです
 adduser <username> sudo (今回は; jyasukaw)  or (sudo adduser <login>) or (sudo usermod -aG sudo <username>)
 ...add user in the sudo group
+＜adduser コマンド＞
+adduserコマンドは、DebianベースのLinuxシステムで新しいユーザーアカウントを追加するためのコマンドです
+＜usermod -aGコマンド＞
+usermod -aGコマンドは、DebianベースのLinuxシステムでユーザーをグループに追加するためのコマンドです。このコマンドは、既存のユーザーに対して追加のグループメンバーシップを設定するために使用されます
+sudo usermod -aG groupname username
+usermod: ユーザーの属性を変更するためのコマンドです。
+-aオプション：ユーザーに新しいグループを追加する際に、このオプションは既存のグループからユーザーを削除しないように指定します。これは、ユーザーに新しいグループのメンバーとして追加する際に、既存のグループメンバーシップを破壊しないようにするために使用されます。つまり、ユーザーは複数のグループのメンバーであることができます。このオプションは-Gと一緒に使用します。
+-Gオプション：ユーザーが所属するグループを設定または変更するために使用されるオプションです。このオプションには、ユーザーを追加するグループの名前を指定します。複数のグループを指定する場合、カンマで区切ります。ユーザーはこれらの指定したグループのメンバーになります。
 getent group sudo
 ...Verify whether user was successfully added to sudo group
+＜getentコマンド＞
+getentコマンドは、Unix系オペレーティングシステムでpasswd、group、hosts、services、protocolsなどのデータベースからエントリを取得するためのコマンドです。getentコマンドは、これらのデータベース内の情報を検索するのに便利です。
+getent group: /etc/groupファイルの内容を表示します。グループに関する情報が含まれています。
 sudo reboot
-sudo -v -> password
 sudo addgroup user42
 sudo adduser yourusername user42 (sudo adduser <user> <groupname>)
 sudo apt update              GID= Group id
@@ -75,14 +89,18 @@ sudo apt install openssh-server
 When we are asked for confirmation we will write y
 sudo systemctl status ssh  or (sudo service ssh status) or (dpkg -l | grep ssh)
 ...show how is the state of it.
+＜systemctlコマンド＞
+systemctlは、DebianベースのLinuxディストリビューションで使用される、システムの初期化およびサービス管理を行うためのコマンドラインユーティリティです。これを使用することで、システムの起動、シャットダウン、サービスの制御など、さまざまなシステムタスクを管理できます。
 nanoの使い方（編集と保存調べる）
 sudo nano /etc/ssh/sshd_config         or (sudo apt install vim) -> (sudo vi(m) /etc/ssh/sshd_config)
 ...some files have been created and we need to configur them
 (If you are not on root you will not be able to edit the file; as you know, for switching to root we use su.)
+"config" は "configuration" の略で、システム、ソフトウェア、アプリケーションなどの設定や構成に関する情報や設定を指します。一般的に、"config" は以下のような文脈で使用されます。
 Once we are editing the file we need to update the following lines:
 
  #Port 22 -> Port 4242
  #PermitRootLogin prohibit-password -> PermitRootLogin no
+ rootユーザーがSSHを使用してログインできるが、パスワードを使用したログインを許可しないことを意味します。代わりに、SSHキー認証（公開鍵認証）が許可されます。変更後の設定であるPermitRootLogin noは、rootユーザーによるSSHログインを完全に無効にし、rootユーザーがSSHを介してサーバーにアクセスできないようにします。これはセキュリティの観点から推奨される設定で、rootユーザーがSSHログインを使用できないことで、セキュリティの向上が期待されます。
 
 When finish we have to save the changes and leave the file.
 Now with the file /etc/ssh/ssh_config. (not sshd_config)
@@ -110,6 +128,7 @@ sudo ufw status   or (sudo ufw status verbose) or (sudo ufw status numbered)
 Configuring sudo
 sudo touch /etc/sudoers.d/sudoconfig
 ...create a file in /etc/sudoerd.d/. The file will serve the purpouse of storing our sudo policy.
+/etc/sudoers.d は、Debianおよび他の多くのLinuxディストリビューションで使用される、sudo（スーパーユーザード）コマンドの設定ファイルの一部です。このディレクトリは、sudo権限を持つユーザーまたはシステム管理者が、個別の設定ファイルを使用してsudoの動作をカスタマイズするために利用できる場所です。
 sudo mkdir /var/log/sudo
 ...create a directory as is asked in the subject in /var/log/ because each commands need to be logged, the input and output
 sudo nano /etc/sudoers.d/sudoconfig
@@ -118,10 +137,23 @@ sudo nano /etc/sudoers.d/sudoconfig
 Defaults    passwd_tries=3
 Defaults    badpass_message="Incorrect password"
 Defaults    logfile="/var/log/sudo/sudo_config"          ->(Path where will the sudo logs will be stored.)
+これはsudoログファイルのパスを指定しています。sudoのログファイルは /var/log/sudo/sudo_config に保存されます。
 Defaults    log_input, log_output                        ->(What will be logged.)
+この設定は、sudoコマンドの実行時に入力と出力をログに記録するように指示しています。つまり、実行されたコマンドとそれに対する入力および出力がログに記録されます。
 Defaults    iolog_dir="/var/log/sudo"                    ->(What will be logged.)
+こちらもログディレクトリに関連する設定で、sudoログファイルのディレクトリを指定しています。ログファイルは /var/log/sudo ディレクトリに格納されます。
 Defaults    requiretty                                   ->(TTY is required)
+この設定はTTY（テレタイプ）の要件に関連しています。TTYが必要な場合、sudoコマンドの実行は物理的なターミナルに接続されている必要があります。
+有効にすることでcronなどからの実行を許可させない
+requirettyの重要性と使用例：
+セキュリティ強化:
+requirettyは、セキュリティの観点から重要です。特に、sudoを使用して特権ユーザー権限でコマンドを実行できる場合、TTYの要件を設けることは、悪意のある攻撃を防ぐのに役立ちます。
+TTYがない場合、悪意のあるユーザーがリモートからsudoを使用して特権コマンドを実行しようとする可能性があります。TTYを要求することで、物理的なアクセスが必要であり、その場所からのみsudoが許可されるようになります。
+遠隔操作の制限:
+一部の状況では、TTYの要件を設けることで、遠隔でコマンドを実行することを制限できます。TTYがない場合、SSHなどを使用して遠隔でsudoを実行しようとする試みが防止されます。
 Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"    ->(Folders that will be excluded of sudo)
+この設定は、sudoコマンドを実行する際に利用可能なプログラムのパスを制御します。指定されたパスの中にあるコマンドのみがsudoで実行可能です。これにより、セキュリティを向上させ、誤って不正なプログラムを実行するリスクを軽減します。
+コロン : は通常、パス（ディレクトリパスやファイルパス）などの要素を区切るために使用される一般的な区切り文字です。多くの場面で、コロンは異なる要素を区別し、区切るために使用されます。
 
 Setting up a strong password policy
 sudo nano /etc/login.defs
@@ -132,11 +164,14 @@ PASS_MAX_DAYS 99999 -> PASS_MAX_DAYS 30
 PASS_MIN_DAYS 0 -> PASS_MIN_DAYS 2
 
 (PASS_MAX_DAYS: It's the max days till password expiration.)
-(PASS_MIN_DAYS: It's the min days till password change.)
+(PASS_MIN_DAYS: パスワードの変更が許可される最小日数は2日に設定されます。)
 (PASS_WARN_AGE: It's the days till password warning.)
 
 sudo apt install libpam-pwquality
 ...continuing the installation we must install the next packages
+これがないとパスワードポリシーの変更が反映されない
+libpam-pwquality は、DebianベースのLinuxシステムで使用されるパスワードポリシーチェックのためのライブラリです。このライブラリは、PAM（Pluggable Authentication Module）と呼ばれる認証関連の仕組みを拡張し、パスワードの品質ポリシーを強化するために使用されます。
+libpam-pwquality を使用すると、パスワードに対してさまざまな制約とポリシーを設定できます。例として、パスワードの最小文字数、大文字と小文字の要件、数字の必要性、特殊文字の使用、前回のパスワードとの差異の設定、パスワードの有効期限などが挙げられます。これにより、セキュリティを向上させ、強力なパスワードの使用を促進します。
 we wrute Y so we can continue; we wait till it finish.
 nano /etc/pam.d/common-password
 ...edit a file and change itś content
@@ -178,24 +213,33 @@ We will click accept so changes can be saved.
 (Type sudo service sshd status to check your SSH Status)
 
 In your host (physical) machine (iTerm )open Terminal and run
-ssh <username>@127.0.0.1 -p 4242     or   (ssh <username>@localhost -p 4242)   or  (ssh m<username>@0.0.0.0 -p 4242)
+ssh <username>@127.0.0.1 -p 4242     or   (ssh <username>@localhost -p 4242)   or  (ssh <username>@0.0.0.0 -p 4242)
+ssh <username>@127.0.0.1 -p 4242:
+127.0.0.1 はローカルホスト（自分自身のコンピュータ）を指します。このコマンドは、自分自身のコンピュータ上で動作するSSHサーバーに接続しようとしています。
+-p 4242 はSSHサーバーが待ち受けるポートを指定します。ここではポート4242を使用して接続しようとしています。
+ssh <username>@localhost -p 4242:
+localhost はローカルホスト（自分自身のコンピュータ）を指します。このコマンドも自分自身のコンピュータ上で動作するSSHサーバーに接続しようとしています。
+ssh <username>@0.0.0.0 -p 4242:
+0.0.0.0 は特殊なIPアドレスで、通常はすべてのネットワークインターフェイスを示します。このコマンドも自分自身のコンピュータ上で動作するSSHサーバーに接続しようとしています。
+これらのコマンドはすべてローカルホスト上で自分自身のコンピュータに接続しようとしており、異なる表現方法を使用していますが、結果は同じです。どのコマンドを使用しても、ローカルで実行中のSSHサーバーに接続できます。
 it will ask for the password of the user that we are trying to log in. Once the password is introduced it will show or login in green, that will mean that the connections has been successfully.
 exit
 ...To quit the ssh connection
 Now you can control your virtual machine from the host terminal.
-
-
-Dont forget to make a clone or snapshot of your VM before evaluation 
-
 
 Crontab
 It is a background process manager. The specified processes will be executed at the time you specify in the crontab file.
 sudo vim /usr/local/bin/monitoring.sh
 ...Create script file
 sudo chmod +x /usr/local/bin/monitoring.sh
-...Make executable
+...Make executable権限を与える
+スクリプトファイルを実行するためには、そのファイルに実行権限が必要です。実行権限がない場合、スクリプトは実行できません。
 sudo crontab -u root -e
 ...To properly configure crontab, we must edit the crontab file
+crontab: crontab は、タイミングベースで実行されるジョブ（タスク）のスケジュールを管理するためのコマンドです。ジョブを定期的に実行させることができ、バックアップ、ログの削除、データベースのバキュームなど、さまざまなタスクを自動化するために使用されます。
+-u root: -u オプションは、どのユーザーの crontab を編集するかを指定します。この場合、root ユーザーの crontab ファイルを編集することを指定しています。
+-e: -e オプションは、crontab ファイルを編集モードで開くために使用されます。これにより、テキストエディタが起動し、crontab ファイルを編集できます。
+-lオプションは スケジュールを表示
 After line23 
 
 23 # m h  dom mon dow   command
@@ -205,8 +249,20 @@ Put line24
 
 */10 * * * * /usr/local/bin/monitoring.sh
 
-*/10 * * * * sh /path/to/script   ???写真参考
-*/10 * * * * /home/monitoring.sh
+このクロンジョブの設定 */10 * * * * /usr/local/bin/monitoring.sh は、指定したスクリプト /usr/local/bin/monitoring.sh を10分ごとに実行するためのタイミングを定義しています。以下に各フィールドの解説を示します:
+*/10: 分 (Minutes) のフィールドです。*/10 は "10分おきに" を意味します。つまり、毎時間の 0 分、10 分、20 分、30 分、40 分、50 分に実行されることを指定しています。
+*: 時 (Hours) のフィールドです。* はすべての時間を意味します。このジョブは時間に依存しないため、すべての時間に実行されます。
+*: 日 (Day of Month) のフィールドです。* はすべての日に実行されることを意味します。日に依存しないジョブとなります。
+*: 月 (Month) のフィールドです。* はすべての月に実行されることを意味します。月に依存しないジョブとなります。
+*: 曜日 (Day of Week) のフィールドです。* はすべての曜日に実行されることを意味します。曜日に依存しないジョブとなります。
+つまり、この設定は /usr/local/bin/monitoring.sh というスクリプトを毎時間の 0 分、10 分、20 分、30 分、40 分、50 分に実行し、日や月、曜日に依存せずに実行するジョブを定義しています。これにより、10分ごとに monitoring.sh が自動的に実行され、システムの監視や定期的なタスクの実行など、さまざまな用途に活用できます。
+
+0 0 6-7,8-9 * 1 /usr/local/bin/monitoring.sh
+0 0: 分と時のフィールドで、0 分と 0 時（真夜中）を指定します。
+6-7,8-9: 日のフィールドで、毎年 8 月および 9 月の 6 日と 7 日を指定し、その後に 8 月および 9 月の 月曜日も含めます。
+*: 月のフィールドで、すべての月を指定します。
+1: 曜日のフィールドで、月曜日（1 は月曜日を表します）を指定します。
+これにより、指定された条件に合致する日付と曜日で、毎年 8 月と 9 月の 6 日と 7 日、および月曜日にクロンジョブが 0 時 0 分に実行されます。
 
 sudo crontab -u root -l
 ...Check scheduled jobs
@@ -227,23 +283,28 @@ To obtain the signature, the first thing we must do is shut down the virtual mac
 
 Open iTerm and type 
 
-cd
+[cd]
 Then type 
 
-cd sgoinfre/students/<your_intra_username>/VirtualBox VMs
+[cd sgoinfre/students/<your_intra_username>/VirtualBox VMs]
 or 
 ~/VirtualBox VMs/
 
 then
 shasum <machinename>.vdi
 
-shasum VirtualBox.vdi or whatever your Virtual Machine is called (This can take from a few seconds to 5 mins).
+[shasum VirtualBox.vdi] or whatever your Virtual Machine is called (This can take from a few seconds to 5 mins).
 
 And save the signature to a file named signature.txt.
+
 Copy the output number and create a signature.txt file and paste that number in the file.
+
 Now you submit the signature.txt file with the output number in it.
  The result of this signature is what we will need to add to our signature.txt file and subsequently upload the file to the intra repository. It is very important not to reopen the machine since the signature will be modified. For corrections, remember to clone the machine so you can turn it on without fear of changing the signature.
 
 What is shasum❓ It is a command that allows you to identify the integrity of a file using the SHA-1 hash check sum of a file.
 
 CONGRATULATIONS! YOU HAVE NOW FINISHED! NEXT IS THE EVALUATION
+
+レビューが3回終了するまで、絶対にVMを起動してはいけないです。ハッシュ値が変わってしまうので
+気をつけるのは提出したらレビューまでいじらないぐらいです いじりたい場合はクローンで

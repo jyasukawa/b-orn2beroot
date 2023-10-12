@@ -1,35 +1,112 @@
-＜Script monitoring＞
-lvm useの項目が暗号化パーティションにlvmと名前のついたパーティションがあり、lvmが存在しない場合、正しく表示されない場合があると思う
-[warn] monitoring.sh の中で sudo コマンドを使っていたため、monitoring.sh を実行する度に sudo の実行数が増えるような挙動となっていた
+signature of your machine’s virtual disk
+ディスクイメージのユニークな識別子: 仮想ディスクイメージは通常、一意のIDまたは署名を持っており、仮想マシンホストソフトウェアが正しいディスクイメージを識別できるようになります。この識別子はディスクが変更されていないことを確認するのにも使用されます。
+signature.txt
 
-＜パスワードポリシー＞
-パスワードポリシーにroot とuserを追加してあげてください
+/sgoinfre/jyasukaw/Virtual Box/Born2beRoot/Born2beRoot.vdi
+diffコマンドか目視で一致してるか確認
 
-＜cron＞
-再起動の際においても、disableではなく、stopを使われており立ち上がりで、cronがactiveの状態になっておりました。
-cronの自動起動を無効にするコマンドをお伝えしました
-systemctlにおけるstopとdisableの違いなど分かりづらい部分があったと思いましたので、実際に試して確認していただければと思います
-cronでの出力には問題ありませんでしたが、"No error must be visible."とあったため、「Script monitoring」はNoとします。
+debianを起動
 
+[sudo ufw status] ...UFW サービスが開始されていることを確認
 
+[sudo systemctl status ssh] ...SSH サービスが開始されていることを確認
 
-パーティションのENCRYPTED　LVMでSCSI3を選びたいのにSCSI2しか出てこないのはなぜでしょう そのせいかpartitionが三つくらいしかできてない
-…その状況僕もなりました。 作り直すと、SCSI3になったりSCSI2になったりしたので謎です
+[cat /etc/os-release] or [uname -a] ...debianであることを表示
 
-このサイトを参考にVirtualboxでのDebianの設定は上手くいったのですが、ログインが出来ません。
-…ホスト名でログインするではなく、 管理者や作成したユーザーでログインすると思います、 管理者のパスワードはインストールする時に作成されているので、 名前は分かったらログインできるはずです。 ※Hintは課題の名前にあります
-…rootでログインしたら出来ました！」
+([id -un]) ...ユーザー名確認、次の手順に省略可
 
-<cron> で echo を用いると標準出力できませんので注意が必要です wallじゃないとできませんでした
+[getent group sudo] ...「sudo」および「user42」グループに所属していることを確認
 
-common-passwordにてpam_pwquality.soを呼び出さないと設定が永遠に反映されません
+[getent group user42] ...「sudo」および「user42」グループに所属していることを確認
 
-注：insultsパラメーターを構成すると、ユーザーが間違ったパスワードを入力した場合にコマンドラインに特定のメッセージを出力する badpass_message パラメーターが無効になります（デフォルトのメッセージは「申し訳ありませんが、再試行してください」）。 。
+[sudo adduser <new_username>] ...新しいユーザーを作成する
+([getent passwd <username>])
 
-レビューが3回終了するまで、絶対にVMを起動してはいけないです。ハッシュ値が変わってしまうので
-気をつけるのは提出したらレビューまでいじらないぐらいです いじりたい場合はクローンで
+[sudo nano /etc/pam.d/common-password] ...パスワードの設定制限など
 
-問題文の10分ごとに起動させるっていうのは、何を起動させるのでしょうか？
-…なるほど！ monitoring.shスクリプトファイルを10分ごとに起動させて画像のようなものを出力するんですね。
+[sudo nano /etc/login.defs] ...パスワードの有効期限など
 
-すいません。いまのところsudoのinputとoutputを一つのファイルに保存する方法しかわからないのですが、問題文では特定のフォルダへの保存を指定されています。ファイルに保存するだけじゃダメってことですか？…他の方からレクチャーを受けた話なのですが、sudoのアウトプットに関しては/var/log/sudo-ioフォルダに入っている00というフォルダににバイナリ形式で逐一保存されていくようです。なのでこれを/var/log/sudoに保存されるように設定すれば良いと聞きました。 方法としては visudoにiolog_dirという項目を設定することで実現できると思います…なるほど！dirで選択する方法があったのですね！
+([sudo chage -l <new_username>]) ...パスワードの有効期限ルールを確認する
+
+[sudo addgroup evaluating] ...「evaluating」という名前のグループを作成
+
+[sudo adduser <new_username> evaluating] or [sudo usermod -aG evaluating <new_username>] ...作成したグループに追加
+
+[getent group evaluating] or [groups <username>]...グループに追加されたか確認
+
+[hostnamectl] or [uname -n] or [sudo hostnamectl status] ...マシンのホスト名が次のように正しくフォーマットされていることを確認
+
+(sudo adduser new_user sudo)???xxxxx
+
+[sudo hostnamectl set-hostname <new-hostname>] or [sudo nano /etc/hosts] ...ホスト名を変更
+
+[sudo reboot] ...同じ動作を繰り返す
+
+[lsblk] ...パーティションを表示
+
+[dpkg -l | grep sudo] ...「sudo」プログラムが仮想マシンに正しくインストールされていることを確認
+
+[sudo adduser <new_username> sudo] or [sudo usermod -aG sudo <new_username>] ...sudoグループに追加
+
+[getent group sudo] or [groups <username>] ...sudoグループに追加されたか確認
+
+Sudo は SuperUser DO の略で、制限されたファイルや操作にアクセスするために使用されます。デフォルトでは、Linux はシステムの特定の部分へのアクセスを制限し、機密ファイルの侵害を防ぎます。
+sudo コマンドは一時的に権限を昇格し、ユーザーが root ユーザーとしてログインせずに機密タスクを完了できるようにします。
+sudo を使用すると、ユーザーは特定のディレクトリ上のファイルを一覧表示したり編集したりできます。
+
+[nano /etc/hosts]...[sudo nano /etc/hosts]
+[apt-get update]...[sudo apt-get update]
+
+[sudo nano /etc/sudoers.d/sudo_config] ...Sudoポリシーファイル
+
+[sudo ls /var/log/sudo/] .../var/log/sudo/フォルダーが存在し、ファイルがあることを確認
+
+[sudo nano /var/log/sudo/sudo.log] ...更新前のログを確認
+
+[sudo apt update] ...sudo経由でコマンドを実行
+
+[sudo nano /var/log/sudo/sudo.log] ...更新後のログを確認
+
+[dpkg -l | grep ufw] ...「UFW」プログラムが仮想マシンに正しくインストールされていることを確認
+
+[sudo ufw status] ...正常に動作していることを確認 && UFW でアクティブなルールをリストする。ポート 4242 にはルールが存在することを確認
+
+[sudo ufw allow 8080] ...ポート 8080 を開く新しいルールを追加
+
+[sudo ufw status] ...追加を確認
+
+[sudo ufw delete allow 8080] ...新しいルールを削除
+
+[sudo ufw status] ...削除を確認
+
+[dpkg -l | grep ssh] ...SSH サービスが仮想マシンに正しくインストールされていることを確認
+
+[sudo systemctl status ssh] ...正常に動作していることを確認 && 4242 のみを使用していることを確認
+
+([sudo vi /etc/ssh/ssh(d)_config]) ...(4242 のみを使用していることを確認)
+
+[ssh <username>@localhost -p 4242] ...アクセスできることを確認
+
+[~$ login root]
+
+[ssh root@localhost -p 4242] ...root ユーザーで SSH ログインできないことを確認
+
+[sudo nano /usr/local/bin/monitoring.sh] ...コードを示しながら、スクリプトがどのように機能するかを説明
+
+[sudo crontab -u root -e] ...*/1 * * * * sh /usr/local/bin/monitoring.shを追加(スクリプトの実行を毎分に変更)
+
+[sudo crontab -u root -e] ...次の行をコメント化する。*/1 * * * * sh /usr/local/bin/monitoring.sh
+サーバーの起動時にスクリプトの実行を停止する
+スクリプト自体は変更しない
+
+[sudo systemctl stop cron] ...cron停止 -> 立ち上がりで、cronがactiveの状態になってしまう
+[sudo systemctl disable cron] ...cronの自動起動無効化、機能を完全に止める
+（ただ、完全停止にしてしまうと、他のcronも停止してしまうため、コメントアウトでもいい）
+
+[reboot] ...サーバーを再起動する
+
+[sudo nano /usr/local/bin/monitoring.sh] ...
+[ls -l /usr/local/bin/monitoring.sh] ...
+スクリプトがまだ同じ場所に存在していること、その権限、および内容が変更されていないことを確認する
+
+finish
